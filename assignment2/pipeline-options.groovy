@@ -1,5 +1,6 @@
 pipeline {
-    agent any
+    agent {
+        label 'slave-1'}
 
     options {
         // เก็บ 20 build ล่าสุด และ 10 artifact ล่าสุด และเก็บ artifact ไว้ 7 วัน
@@ -34,7 +35,7 @@ pipeline {
     post {
         // ถ้า build สำเร็จ ให้เก็บ artifact ไว้
         success {
-            archiveArtifacts artifacts: 'target/*.jar',
+            archiveArtifacts artifacts: 'target/*.jar'
         }
     }
 }

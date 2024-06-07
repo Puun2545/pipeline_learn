@@ -1,4 +1,4 @@
-node {
+node ('slave-1'){ // กำหนด agent ที่จะใช้ในการ build ตรงนี้
     // กำหนดตัวเลือกต่างๆ ที่ใช้ใน pipeline
     properties([
         buildDiscarder(logRotator(numToKeepStr: '20', artifactNumToKeepStr: '10', artifactDaysToKeepStr: '7'))
@@ -16,8 +16,8 @@ node {
 
         stage('Build') {
             // สร้างไฟล์ version.properties ที่มีข้อมูลเวอร์ชันของ Maven
-            sh 'echo MAVEN_VERSION=${MAVEN_VERSION} > version.properties'
-            // ใช้ Maven ที่ติดตั้งใน Jenkins
+             sh 'echo MAVEN_VERSION=${MAVEN_VERSION} > version.properties' // comment แล้วไม่มีผลรันผ่านเหมือนเดิม
+            // ใช้ Maven ที่ติดตั้งใน Jenkins -D คือการส่งค่าเข้าไปใน pom.xml ที่ project.version นั้นเอง แบบ Dynamics 
             sh "${MAVEN_HOME}/bin/mvn clean package -Dproject.version=${MAVEN_VERSION}"
         }
 
@@ -26,6 +26,7 @@ node {
             archiveArtifacts artifacts: 'target/*.jar', fingerprint: false
         }
 
+        // เข้าใจว่าถ้ามัน Try Stage แล้วหาก Exception จะไปที่ Catch และ Finally จะทำงานต่อ
         // // ตั้งค่าให้ build นี้เป็น success
         // currentBuild.result = 'SUCCESS'
 
@@ -39,12 +40,11 @@ node {
         //     }
         // }
 
-
     } catch (Exception e) {
         // จัดการข้อผิดพลาดถ้ามี
         currentBuild.result = 'FAILURE' // ตั้งค่าให้ build นี้เป็น fail
         throw e
     } finally {
-        echo 'Build & Archived SUCCESS!'
+        echo 'DONE'
     }
 }
