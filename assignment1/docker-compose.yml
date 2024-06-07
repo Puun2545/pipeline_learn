@@ -1,0 +1,43 @@
+version: '3.8'
+services:
+  jenkins-master:
+    image: jenkins/jenkins:lts-jdk11
+    container_name: jenkins-master
+    ports:
+      - "8080:8080"
+      - "50000:50000"
+    volumes:
+      - jenkins_home:/var/jenkins_home
+    environment:
+      - JAVA_OPTS=-Djenkins.install.runSetupWizard=false  # Disable the initial setup wizard
+
+  jenkins-agent-1:
+    image: jenkins/inbound-agent:latest
+    container_name: jenkins-agent-1
+    environment:
+      - JENKINS_URL=http://jenkins-master:8080
+      - JENKINS_AGENT_NAME=agent-1
+      - JENKINS_SECRET=YOUR_AGENT_SECRET
+      - JENKINS_AGENT_WORKDIR=/home/jenkins/agent
+    depends_on:
+      - jenkins-master
+    volumes:
+      - agent_workdir_1:/home/jenkins/agent
+
+  jenkins-agent-2:
+    image: jenkins/inbound-agent:latest
+    container_name: jenkins-agent-2
+    environment:
+      - JENKINS_URL=http://jenkins-master:8080
+      - JENKINS_AGENT_NAME=agent-2
+      - JENKINS_SECRET=YOUR_AGENT_SECRET
+      - JENKINS_AGENT_WORKDIR=/home/jenkins/agent
+    depends_on:
+      - jenkins-master
+    volumes:
+      - agent_workdir_2:/home/jenkins/agent
+
+volumes:
+  jenkins_home:
+  agent_workdir_1:
+  agent_workdir_2:

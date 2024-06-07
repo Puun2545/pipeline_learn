@@ -1,0 +1,45 @@
+node {
+    env.MY_VAR = 'Hello World'
+
+    try {
+        stage('Checkout') {
+        echo 'Checking out the code'
+        }
+
+        stage('Build') {
+            echo 'Starting the build Stage'
+            echo 'Build Stage completed successfully'
+        }
+
+        stage('Test') {
+            echo 'Starting the Test Stage'
+            echo 'Test Stage completed successfully'
+        }
+
+        stage('Deploy') {
+            echo 'Starting the Deploy Stage'
+            echo 'Deploy Stage completed successfully'
+        }
+
+        currentBuild.result = 'SUCCESS'
+    }
+
+
+    catch (Exception e) {
+        currentBuild.result = 'FAILURE'
+        echo "Error: ${e}"
+
+    }
+
+
+    finally {
+       if (currentBuild.result == 'FAILURE') {
+           echo 'Sending email to the team'
+       }
+       else {
+           echo 'Deployment completed successfully'
+       }
+    }
+    
+    
+}
