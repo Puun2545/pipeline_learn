@@ -21,13 +21,23 @@ node {
             sh "${MAVEN_HOME}/bin/mvn clean package -Dproject.version=${MAVEN_VERSION}"
         }
 
-        // ตั้งค่าให้ build นี้เป็น success
-        currentBuild.result = 'SUCCESS'
-
         // ถ้า build สำเร็จ ให้เก็บ artifact ไว้
         stage('Archive') {
             archiveArtifacts artifacts: 'target/*.jar', fingerprint: false
         }
+
+        // // ตั้งค่าให้ build นี้เป็น success
+        // currentBuild.result = 'SUCCESS'
+
+        // // ถ้า build สำเร็จ ให้เก็บ artifact ไว้
+        // stage('Archive') {
+        //     if currentBuild.result == 'SUCCESS' {
+        //         archiveArtifacts artifacts: 'target/*.jar', fingerprint: false
+        //     }
+        //     else {
+        //         echo 'Build is not success, skip archiving'
+        //     }
+        // }
 
 
     } catch (Exception e) {
