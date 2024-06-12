@@ -13,10 +13,10 @@ services:
 
   jenkins-agent-1:
     image: jenkins/inbound-agent:latest
-    container_name: jenkins-agent-1
+    container_name: slave-1
     environment:
       - JENKINS_URL=http://jenkins-master:8080
-      - JENKINS_AGENT_NAME=agent-1
+      - JENKINS_AGENT_NAME=slave-1
       - JENKINS_SECRET=YOUR_AGENT_SECRET
       - JENKINS_AGENT_WORKDIR=/home/jenkins/agent
     depends_on:
@@ -26,10 +26,10 @@ services:
 
   jenkins-agent-2:
     image: jenkins/inbound-agent:latest
-    container_name: jenkins-agent-2
+    container_name: slave-2
     environment:
       - JENKINS_URL=http://jenkins-master:8080
-      - JENKINS_AGENT_NAME=agent-2
+      - JENKINS_AGENT_NAME=slave-2
       - JENKINS_SECRET=YOUR_AGENT_SECRET
       - JENKINS_AGENT_WORKDIR=/home/jenkins/agent
     depends_on:
