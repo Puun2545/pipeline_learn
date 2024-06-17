@@ -19,6 +19,7 @@ pipeline {
     stages {
         stage('Checkout') {
             steps {
+                // ไม่ได้มีประโยชน์อะไรเลย ทำเพื่อทดสอบเท่านั้น
                 testCheckout(
                     branch: 'main', 
                     credentialsId: 'git-credential', 

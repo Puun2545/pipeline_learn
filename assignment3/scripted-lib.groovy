@@ -1,4 +1,4 @@
-library 'my-shared-library@v0.0.1'
+library "my-shared-library@v0.0.1"
 
 testLib()
 
@@ -16,19 +16,16 @@ node('slave-1') {
 
         stage('Checkout') {
             // ดึงโค้ดจาก GitHub
-            testCheckout(
-                branch: 'main', 
-                credentialsId: 'git-credential', 
-                url: 'https://github.com/Puun2545/java-ci-test'
-            )
+            git branch: 'main', credentialsId: 'git-credential', url: 'https://github.com/Puun2545/java-ci-test'
         }
 
         stage('Build') {
             // สร้างโปรเจคด้วย Maven
+            env.MAVEN_HOME = MAVEN_HOME
             echo "Loading testBuild function..."
             testBuild(MAVEN_VERSION)
         }
-        
+    
         stage('Archive') {
             archiveArtifacts artifacts: 'target/*.jar', fingerprint: false
         }
@@ -36,6 +33,7 @@ node('slave-1') {
     catch (Exception e) {
         // จัดการข้อผิดพลาดถ้ามี
         currentBuild.result = 'FAILURE' // ตั้งค่าให้ build นี้เป็น fail
+        echo e.toString()
         throw e
     }
     finally {
