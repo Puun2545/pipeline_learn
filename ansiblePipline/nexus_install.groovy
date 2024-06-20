@@ -22,7 +22,7 @@ node('slave-1') {
         stage('Ansible plays') {
             // ใช้ ansible ในการทำงาน
             ansiblePlaybook(
-                playbook: 'playbooks/install_nginx.yml',
+                playbook: 'playbooks/nexus/nexus_install.yml',
                 inventory: 'inventory/hosts.yml',
                 extraVars: [
                     ansible_become_pass: '1234'
