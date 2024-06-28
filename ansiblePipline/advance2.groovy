@@ -1,9 +1,10 @@
-import groovy.json.JsonSlurper
-import groovy.json.JsonOutput
-
 properties ([
     buildDiscarder(logRotator(numToKeepStr: '10')),
     parameters([
+            string(
+                name: 'HOSTS',
+                defaultValue: 'localhost', 
+                description: 'Enter the hostnames or IP address'),
             activeChoice(
                 choiceType: 'PT_SINGLE_SELECT',
                 description: 'Select Tools to development',
@@ -47,7 +48,7 @@ runPipeline([
     echo "Selected HOSTS: ${context.HOSTS}"
     echo "Selected Action: ${context.ACTION}"
     checkOutCode(context)
-    loadJSONParams(context)
+    writeVars(context, loadJSONParams(context))
     checkJSON(context)
     checkAnsiblePath(context)
     runAnsiblePlaybook(context)
@@ -55,7 +56,7 @@ runPipeline([
 }
 
 def runPipeline(Map args, Closure stages) {
-    node('slave-1') {
+    node('master') {
         ansiColor('xterm') {
             timestamps(){
                 timeout(time: 50, unit: 'MINUTES'){
@@ -69,8 +70,7 @@ def runPipeline(Map args, Closure stages) {
                     }
                 }
             }
-        }
-
+        }รือ
     }
 }
 
@@ -84,16 +84,13 @@ def checkOutCode(Map args) {
 def loadJSONParams(Map args) {
     stage ('Read and Modify JSON') {
 
-        def jsonFile = "./playbooks/${args.TOOLS}/${args.ACTION}Params.json"
+        def jsonFile = "./playbooks/${args.TOOLS}/jenkinsSetting/${args.ACTION}Params.json"
         def jsonText = readFile(jsonFile)
-        def jsonParams = new JsonSlurper().parseText(jsonText)
-
-        // แปลง LazyMap เป็น HashMap
-        def serializableParams = new HashMap(jsonParams)
+        def jsonParams = readJSON text: jsonText
 
         def paramsList = []
 
-        serializableParams.parameterDefinitions.each { param ->
+        jsonParams.parameterDefinitions.each { param ->
             switch (param.type) {
                 case 'StringParameterDefinition':
                     paramsList << string(name: param.name, defaultValue: param.defaultValue, description: param.description)
@@ -124,31 +121,55 @@ def loadJSONParams(Map args) {
 
         def userInput = input(
             id: 'userInput',
-            message: 'กรุณาใส่พารามิเตอร์',
+            message: 'Enter the following parameters:',
             parameters: paramsList
         )
 
-        // แสดงข้อมูลที่ผู้ใช้กรอก
-        userInput.each { key, value ->
-            echo "${key}: ${value}"
+        return userInput
+    }
+}
+
+def writeVars(Map args, Map userInput) {
+    stage ('Write vars') {
+        def yamlFile = "./playbooks/${args.TOOLS}/${args.TOOLS}_vars.yml"
+
+        // Check if the file exists before attempting to read it
+        if (fileExists(yamlFile)) {
+            def yamlContent = readYaml file: yamlFile
+
+            // Loop through YAML keys and update values
+            yamlContent.each { key, value ->
+                userInput.each { paramKey, paramValue ->
+                    if (key.equalsIgnoreCase(paramKey)) {
+                        yamlContent[key] = paramValue
+                    }
+                }
+            }
+
+            // Write back to the YAML file
+            def yamlString = writeYaml returnText: true, data: yamlContent
+            writeFile file: yamlFile, text: yamlString
+            echo "File ${yamlFile} has been updated."
+        } else {
+            error "File ${yamlFile} does not exist."
         }
-
     }
 }
 
-def checkJSON(Map args) {
-    stage ('Check JSON') {
-        sh "cat ./playbooks/${args.TOOLS}/${args.ACTION}Params.json"
-    }
-}
+// def checkJSON(Map args) {
+//     stage ('Check JSON / vars.yml') {
+//         sh "cat ./playbooks/${args.TOOLS}/jenkinsSetting/${args.ACTION}Params.json"
+//         sh "cat ./playbooks/${args.TOOLS}/${args.TOOLS}_vars.yml"
+//     }
+// }
 
 
-def checkAnsiblePath(Map args) {
-    stage ('Check Ansible-playbook run path') {
-        echo "ansible-playbook -i inventory/hosts.yml playbooks/${args.TOOLS}/${args.TOOLS}_${args.ACTION}.yml --extra-vars 'ansible_become_pass=1234'"
-        sh "pwd"
-    }
-}
+// def checkAnsiblePath(Map args) {
+//     stage ('Check Ansible-playbook run path') {
+//         echo "ansible-playbook -i inventory/hosts.yml playbooks/${args.TOOLS}/${args.TOOLS}_${args.ACTION}.yml --extra-vars 'ansible_become_pass=1234'"
+//         sh "pwd"
+//     }
+// }
 
 def runAnsiblePlaybook(Map args) {
     stage ('Run Ansible-playbook') {
@@ -157,7 +178,7 @@ def runAnsiblePlaybook(Map args) {
         // sh "ansible-playbook -i inventory/hosts.yml ./${ansible_playbook} --extra-vars 'ansible_become_pass=1234'"
         ansiblePlaybook(
                 playbook: ansible_playbook,
-                inventory: 'inventory/hosts.yml',
+                inventory: 'inventories/aella_devops/hosts.yml',
                 extraVars: [
                     ansible_become_pass: '1234'
                 ],
