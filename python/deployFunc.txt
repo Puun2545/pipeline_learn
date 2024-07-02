@@ -1,0 +1,17 @@
+# สร้าง zip file
+zip create_tags.zip create_tags.py
+zip check_and_create_image.zip check_and_create_image.py
+zip execute_patch.zip execute_patch.py
+
+# ใช้ AWS CLI ในการ deploy Lambda function
+aws lambda create-function --function-name createTagsFunction \
+--runtime python3.8 --role arn:aws:iam::<account-id>:role/<role-name> \
+--handler create_tags.lambda_handler --zip-file fileb://create_tags.zip
+
+aws lambda create-function --function-name checkAndCreateImageFunction \
+--runtime python3.8 --role arn:aws:iam::<account-id>:role/<role-name> \
+--handler check_and_create_image.lambda_handler --zip-file fileb://check_and_create_image.zip
+
+aws lambda create-function --function-name executePatchFunction \
+--runtime python3.8 --role arn:aws:iam::<account-id>:role/<role-name> \
+--handler execute_patch.lambda_handler --zip-file fileb://execute_patch.zip
